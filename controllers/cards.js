@@ -25,7 +25,7 @@ module.exports.createCard = (req, res) => {
   Card.create({ name, link, owner })
     .then((card) => res.send({ data: card }))
     .catch((err) => {
-      if (err.name === ERROR_TYPE.validity || err.name === ERROR_TYPE.cast) {
+      if (err.name === ERROR_TYPE.valid || err.name === ERROR_TYPE.cast) {
         return res
           .status(ERROR_CODE.badRequest)
           .send({ message: ERROR_MESSAGE.valid });

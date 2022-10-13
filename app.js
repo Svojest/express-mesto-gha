@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+const { ERROR_CODE, MESSAGE_ERROR } = require('./constans/errors');
 // Слушаем 3000 порт
 const { PORT = 3000 } = process.env;
 
@@ -18,6 +19,10 @@ app.use((req, res, next) => {
 
 app.use('/', require('./routes/cards'));
 app.use('/', require('./routes/users'));
+
+app.use((req, res) => {
+  res.status(ERROR_CODE.notFound).send({ message: MESSAGE_ERROR.notFound });
+});
 
 app.listen(PORT, () => {
   console.log(PORT);
