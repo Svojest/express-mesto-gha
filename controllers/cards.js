@@ -3,12 +3,11 @@ const { ERROR_CODE, ERROR_TYPE, ERROR_MESSAGE } = require('../constans/errors');
 
 module.exports.getCards = (req, res) => {
   Card.find({})
-    .select('name link owner likes _id')
     .then((card) => {
       res.send({ data: card });
     })
     .catch((err) => {
-      if (err.name === ERROR_TYPE.valid || err.name === ERROR_TYPE.cast) {
+      if (err.name === ERROR_TYPE.valid) {
         return res
           .status(ERROR_CODE.badRequest)
           .send({ message: ERROR_MESSAGE.valid });
@@ -65,7 +64,6 @@ module.exports.likeCard = (req, res) => {
     { $addToSet: { likes: req.user._id } },
     { new: true },
   )
-    .select('name link owner likes _id')
     .then((card) => {
       if (!card) {
         return res
@@ -93,7 +91,6 @@ module.exports.unlikeCard = (req, res) => {
     { $pull: { likes: req.user._id } },
     { new: true },
   )
-    .select('name link owner likes _id')
     .then((card) => {
       if (!card) {
         return res

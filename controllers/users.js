@@ -3,10 +3,9 @@ const { ERROR_CODE, ERROR_TYPE, ERROR_MESSAGE } = require('../constans/errors');
 
 module.exports.getUsers = (req, res) => {
   User.find({})
-    .select('name about avatar _id')
     .then((user) => res.send({ data: user }))
     .catch((err) => {
-      if (err.name === ERROR_TYPE.valid || err.name === ERROR_TYPE.cast) {
+      if (err.name === ERROR_TYPE.valid) {
         return res
           .status(ERROR_CODE.badRequest)
           .send({ message: ERROR_MESSAGE.valid });
@@ -19,7 +18,6 @@ module.exports.getUsers = (req, res) => {
 
 module.exports.getUser = (req, res) => {
   User.findById(req.params.userId)
-    .select('name about avatar _id')
     .then((user) => {
       if (!user) {
         return res
@@ -66,7 +64,6 @@ module.exports.updateUser = (req, res) => {
     { name, about },
     { new: true, runValidators: true },
   )
-    .select('name about avatar _id')
     .then((user) => {
       if (!user) {
         return res
@@ -95,7 +92,6 @@ module.exports.updateAvatar = (req, res) => {
     { avatar },
     { new: true, runValidators: true },
   )
-    .select('name about avatar _id')
     .then((user) => {
       if (!user) {
         return res
