@@ -4,16 +4,9 @@ const { ERROR_CODE, ERROR_TYPE, ERROR_MESSAGE } = require('../constans/errors');
 module.exports.getUsers = (req, res) => {
   User.find({})
     .then((user) => res.send({ data: user }))
-    .catch((err) => {
-      if (err) {
-        return res
-          .status(ERROR_CODE.badRequest)
-          .send({ message: ERROR_MESSAGE.valid });
-      }
-      return res
-        .status(ERROR_CODE.internalServerError)
-        .send({ message: ERROR_MESSAGE.default });
-    });
+    .catch(() => res
+      .status(ERROR_CODE.internalServerError)
+      .send({ message: ERROR_MESSAGE.default }));
 };
 
 module.exports.getUser = (req, res) => {

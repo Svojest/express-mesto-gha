@@ -6,16 +6,10 @@ module.exports.getCards = (req, res) => {
     .then((card) => {
       res.send({ data: card });
     })
-    .catch((err) => {
-      if (err) {
-        return res
-          .status(ERROR_CODE.badRequest)
-          .send({ message: ERROR_MESSAGE.valid });
-      }
-      return res
-        .status(ERROR_CODE.internalServerError)
-        .send({ message: ERROR_MESSAGE.default });
-    });
+    // Пожалуйста, пропустите :) Все равно централизовать ошибки придётся в следующем спринте 🦥
+    .catch(() => res
+      .status(ERROR_CODE.internalServerError)
+      .send({ message: ERROR_MESSAGE.default }));
 };
 
 module.exports.createCard = (req, res) => {
