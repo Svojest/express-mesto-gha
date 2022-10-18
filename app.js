@@ -19,12 +19,16 @@ const limiter = rateLimit({
 mongoose.connect('mongodb://localhost:27017/mestodb');
 app.use(bodyParser.json());
 
+
 app.use((req, res, next) => {
   req.user = {
     _id: '634864f14883a37c42153e59',
   };
   next();
 });
+
+app.use(limiter);
+app.use(helmet());
 
 app.use('/', require('./routes/cards'));
 app.use('/', require('./routes/users'));
@@ -33,8 +37,7 @@ app.use((req, res) => {
   res.status(ERROR_CODE.notFound).send({ message: ERROR_MESSAGE.notFound });
 });
 
-app.use(limiter);
-app.use(helmet());
+
 app.listen(PORT, () => {
   console.log(PORT);
 });

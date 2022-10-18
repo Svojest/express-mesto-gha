@@ -5,7 +5,7 @@ module.exports.getUsers = (req, res) => {
   User.find({})
     .then((user) => res.send({ data: user }))
     .catch((err) => {
-      if (err.name === ERROR_TYPE.valid) {
+      if (err) {
         return res
           .status(ERROR_CODE.badRequest)
           .send({ message: ERROR_MESSAGE.valid });

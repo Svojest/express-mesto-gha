@@ -7,7 +7,7 @@ module.exports.getCards = (req, res) => {
       res.send({ data: card });
     })
     .catch((err) => {
-      if (err.name === ERROR_TYPE.valid) {
+      if (err) {
         return res
           .status(ERROR_CODE.badRequest)
           .send({ message: ERROR_MESSAGE.valid });
