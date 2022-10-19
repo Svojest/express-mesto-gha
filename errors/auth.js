@@ -3,7 +3,7 @@ const { ERROR_CODE } = require('../constans/errors');
 class AuthError extends Error {
   constructor(message) {
     super(message);
-    this.errorCode = ERROR_CODE.unauthorized;
+    this.statusCode = ERROR_CODE.unauthorized;
   }
 }
 

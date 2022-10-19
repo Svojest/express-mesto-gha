@@ -3,7 +3,7 @@ const { ERROR_CODE } = require('../constans/errors');
 class ValidError extends Error {
   constructor(message) {
     super(message);
-    this.errorCode = ERROR_CODE.badRequest;
+    this.statusCode = ERROR_CODE.badRequest;
   }
 }
 
