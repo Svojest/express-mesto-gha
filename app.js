@@ -5,7 +5,7 @@ const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const { errors, celebrate, Joi } = require('celebrate');
 
-const { auth } = require('./middlewares/auth');
+const auth = require('./middlewares/auth');
 const { login, createUser } = require('./controllers/users');
 const { ERROR_MESSAGE } = require('./constans/errors');
 const { REGEX_URL } = require('./constans/regex');

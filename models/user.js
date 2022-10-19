@@ -21,7 +21,7 @@ const userSchema = new mongoose.Schema({
     required: false,
     validate: {
       validator(v) {
-        return REGEX_URL.url.test(v);
+        return REGEX_URL.test(v);
       },
     },
   },
@@ -31,7 +31,7 @@ const userSchema = new mongoose.Schema({
     unique: true,
     validate: {
       validator(v) {
-        return REGEX_URL.email.test(v);
+        return REGEX_URL.test(v);
       },
     },
   },
