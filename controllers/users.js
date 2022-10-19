@@ -39,10 +39,9 @@ module.exports.getUser = (req, res, next) => {
   User.findById(req.params.userId)
     .then((user) => {
       if (!user) {
-        throw new NotFoundError(ERROR_MESSAGE.NotFoundError);
+        throw new NotFoundError(ERROR_MESSAGE.notFound);
       }
       res.send({ data: user });
-      return true;
     })
     .catch((err) => {
       if (err.name === ERROR_TYPE.valid || err.name === ERROR_TYPE.cast) {
@@ -100,10 +99,9 @@ module.exports.updateUser = (req, res, next) => {
   )
     .then((user) => {
       if (!user) {
-        throw new NotFoundError(ERROR_MESSAGE.NotFoundError);
+        throw new NotFoundError(ERROR_MESSAGE.notFound);
       }
       res.send({ data: user });
-      return true;
     })
     .catch((err) => {
       if (err.name === ERROR_TYPE.valid || err.name === ERROR_TYPE.cast) {
@@ -122,10 +120,9 @@ module.exports.updateAvatar = (req, res, next) => {
   )
     .then((user) => {
       if (!user) {
-        throw new NotFoundError(ERROR_MESSAGE.NotFoundError);
+        throw new NotFoundError(ERROR_MESSAGE.notFound);
       }
       res.send({ data: user });
-      return true;
     })
     .catch((err) => {
       if (err.name === ERROR_TYPE.valid || err.name === ERROR_TYPE.cast) {
