@@ -1,56 +1,86 @@
-const User = require('../models/user');
-const { ERROR_CODE, ERROR_TYPE, ERROR_MESSAGE } = require('../constans/errors');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
-module.exports.getUsers = (req, res) => {
-  User.find({})
-    .then((user) => res.send({ data: user }))
-    .catch(() => res
-      .status(ERROR_CODE.internalServerError)
-      .send({ message: ERROR_MESSAGE.default }));
+const User = require('../models/user');
+const ValidError = require('../errors/valid');
+const NotFoundError = require('../errors/notFound');
+const ConflictError = require('../errors/conflict');
+const { ERROR_TYPE, ERROR_MESSAGE } = require('../constans/errors');
+
+module.exports.login = (req, res, next) => {
+  const { email, password } = req.body;
+
+  return User.findUserByCredentials(email, password)
+    .then((user) => {
+      // Создаем token
+      const token = jwt.sign(
+        { _id: user._id },
+        'some-secret-key',
+        { expiresIn: '7d' },
+      );
+      // Храним token в куки
+      res.cookie('jwt', token, {
+        maxAge: 3600000 * 24 * 7,
+        httpOnly: true,
+        sameSite: true,
+      });
+      res.send({ token }).end();
+    })
+    .catch(next);
 };
 
-module.exports.getUser = (req, res) => {
+module.exports.getUsers = (req, res, next) => {
+  User.find({})
+    .then((user) => res.send({ data: user }))
+    .catch(next);
+};
+
+module.exports.getUser = (req, res, next) => {
   User.findById(req.params.userId)
     .then((user) => {
       if (!user) {
-        return res
-          .status(ERROR_CODE.notFound)
-          .send({ message: ERROR_MESSAGE.notFound });
+        throw new NotFoundError(ERROR_MESSAGE.NotFoundError);
       }
       res.send({ data: user });
       return true;
     })
     .catch((err) => {
       if (err.name === ERROR_TYPE.valid || err.name === ERROR_TYPE.cast) {
-        return res
-          .status(ERROR_CODE.badRequest)
-          .send({ message: ERROR_MESSAGE.valid });
+        return next(new ValidError(ERROR_MESSAGE.valid));
       }
-      return res
-        .status(ERROR_CODE.internalServerError)
-        .send({ message: ERROR_MESSAGE.default });
+      return next(err);
     });
 };
 
-module.exports.createUser = (req, res) => {
-  const { name, about, avatar } = req.body;
-  User.create({ name, about, avatar })
+module.exports.createUser = (req, res, next) => {
+  const {
+    name, about, avatar, email, password,
+  } = req.body;
+
+  bcrypt.hash((password, 10)
+    .then((hash) => User.create({
+      name, about, avatar, email, password: hash,
+    }))
     .then((user) => {
-      res.send({ data: user });
+      res.send({
+        name: user.name,
+        about: user.about,
+        avatar: user.avatar,
+        email: user.email,
+      });
     })
     .catch((err) => {
-      if (err.name === ERROR_TYPE.valid || err.name === ERROR_TYPE.cast) {
-        return res
-          .status(ERROR_CODE.badRequest)
-          .send({ message: ERROR_MESSAGE.valid });
+      if (err.code === 11000) {
+        return next(new ConflictError(ERROR_MESSAGE.userExists));
       }
-      return res
-        .status(ERROR_CODE.internalServerError)
-        .send({ message: ERROR_MESSAGE.default });
-    });
+      if (err.name === ERROR_TYPE.valid || err.name === ERROR_TYPE.cast) {
+        return next(new ValidError(ERROR_MESSAGE.valid));
+      }
+      return next(err);
+    }));
 };
 
-module.exports.updateUser = (req, res) => {
+module.exports.updateUser = (req, res, next) => {
   const { name, about } = req.body;
   User.findByIdAndUpdate(
     req.user._id,
@@ -59,26 +89,20 @@ module.exports.updateUser = (req, res) => {
   )
     .then((user) => {
       if (!user) {
-        return res
-          .status(ERROR_CODE.notFound)
-          .send({ message: ERROR_MESSAGE.notFound });
+        throw new NotFoundError(ERROR_MESSAGE.NotFoundError);
       }
       res.send({ data: user });
       return true;
     })
     .catch((err) => {
       if (err.name === ERROR_TYPE.valid || err.name === ERROR_TYPE.cast) {
-        return res
-          .status(ERROR_CODE.badRequest)
-          .send({ message: ERROR_MESSAGE.valid });
+        return next(new ValidError(ERROR_MESSAGE.valid));
       }
-      return res
-        .status(ERROR_CODE.internalServerError)
-        .send({ message: ERROR_MESSAGE.default });
+      return next(err);
     });
 };
 
-module.exports.updateAvatar = (req, res) => {
+module.exports.updateAvatar = (req, res, next) => {
   const { avatar } = req.body;
   User.findByIdAndUpdate(
     req.user._id,
@@ -87,21 +111,15 @@ module.exports.updateAvatar = (req, res) => {
   )
     .then((user) => {
       if (!user) {
-        return res
-          .status(ERROR_CODE.notFound)
-          .send({ message: ERROR_MESSAGE.notFound });
+        throw new NotFoundError(ERROR_MESSAGE.NotFoundError);
       }
       res.send({ data: user });
       return true;
     })
     .catch((err) => {
       if (err.name === ERROR_TYPE.valid || err.name === ERROR_TYPE.cast) {
-        return res
-          .status(ERROR_CODE.badRequest)
-          .send({ message: ERROR_MESSAGE.valid });
+        return next(new ValidError(ERROR_MESSAGE.valid));
       }
-      return res
-        .status(ERROR_CODE.internalServerError)
-        .send({ message: ERROR_MESSAGE.default });
+      return next(err);
     });
 };

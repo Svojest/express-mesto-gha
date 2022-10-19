@@ -1,58 +1,48 @@
 const Card = require('../models/card');
-const { ERROR_CODE, ERROR_TYPE, ERROR_MESSAGE } = require('../constans/errors');
+const NotFoundError = require('../errors/notFound');
+const ValidError = require('../errors/valid');
+const ForbiddenError = require('../errors/forbidden');
 
-module.exports.getCards = (req, res) => {
+const { ERROR_TYPE, ERROR_MESSAGE } = require('../constans/errors');
+
+module.exports.getCards = (req, res, next) => {
   Card.find({})
     .then((card) => {
       res.send({ data: card });
     })
-    // Пожалуйста, пропустите :) Все равно централизовать ошибки придётся в следующем спринте 🦥
-    .catch(() => res
-      .status(ERROR_CODE.internalServerError)
-      .send({ message: ERROR_MESSAGE.default }));
+    .catch(next);
 };
 
-module.exports.createCard = (req, res) => {
+module.exports.createCard = (req, res, next) => {
   const { name, link } = req.body;
   const owner = req.user;
   Card.create({ name, link, owner })
     .then((card) => res.send({ data: card }))
     .catch((err) => {
       if (err.name === ERROR_TYPE.valid || err.name === ERROR_TYPE.cast) {
-        return res
-          .status(ERROR_CODE.badRequest)
-          .send({ message: ERROR_MESSAGE.valid });
+        return next(new ValidError(ERROR_MESSAGE.valid));
       }
-      return res
-        .status(ERROR_CODE.internalServerError)
-        .send({ message: ERROR_MESSAGE.default });
+      return next(err);
     });
 };
 
-module.exports.deleteCard = (req, res) => {
+module.exports.deleteCard = (req, res, next) => {
   Card.findByIdAndRemove(req.params.cardId)
     .then((card) => {
       if (!card) {
-        return res
-          .status(ERROR_CODE.notFound)
-          .send({ message: ERROR_MESSAGE.notFound });
+        throw new NotFoundError(ERROR_MESSAGE.notFound);
       }
-      return res.send({ data: card });
+      if (card.owner.toString() !== req.user_id) {
+        throw new ForbiddenError(ERROR_MESSAGE.forbidden);
+      }
+      Card.findByIdAndRemove(req.params.cardId)
+        .then((deletedCard) => res.send({ data: deletedCard }))
+        .catch(next);
     })
-    .catch((err) => {
-      if (err.name === ERROR_TYPE.valid || err.name === ERROR_TYPE.cast) {
-        return res
-          .status(ERROR_CODE.badRequest)
-          .send({ message: ERROR_MESSAGE.valid });
-      }
-      return res
-        .status(ERROR_CODE.internalServerError)
-        .send({ message: ERROR_MESSAGE.default });
-    });
-  return true;
+    .catch(next);
 };
 
-module.exports.likeCard = (req, res) => {
+module.exports.likeCard = (req, res, next) => {
   Card.findByIdAndUpdate(
     req.params.cardId,
     { $addToSet: { likes: req.user._id } },
@@ -60,26 +50,14 @@ module.exports.likeCard = (req, res) => {
   )
     .then((card) => {
       if (!card) {
-        return res
-          .status(ERROR_CODE.notFound)
-          .send({ message: ERROR_MESSAGE.notFound });
+        throw new NotFoundError(ERROR_MESSAGE.notFound);
       }
       return res.send({ data: card });
     })
-    .catch((err) => {
-      if (err.name === ERROR_TYPE.valid || err.name === ERROR_TYPE.cast) {
-        return res
-          .status(ERROR_CODE.badRequest)
-          .send({ message: ERROR_MESSAGE.valid });
-      }
-      return res
-        .status(ERROR_CODE.internalServerError)
-        .send({ message: ERROR_MESSAGE.default });
-    });
-  return true;
+    .catch(next);
 };
 
-module.exports.unlikeCard = (req, res) => {
+module.exports.unlikeCard = (req, res, next) => {
   Card.findByIdAndUpdate(
     req.params.cardId,
     { $pull: { likes: req.user._id } },
@@ -87,21 +65,9 @@ module.exports.unlikeCard = (req, res) => {
   )
     .then((card) => {
       if (!card) {
-        return res
-          .status(ERROR_CODE.notFound)
-          .send({ message: ERROR_MESSAGE.notFound });
+        throw new NotFoundError(ERROR_MESSAGE.notFound);
       }
       return res.send({ data: card });
     })
-    .catch((err) => {
-      if (err.name === ERROR_TYPE.valid || err.name === ERROR_TYPE.cast) {
-        return res
-          .status(ERROR_CODE.badRequest)
-          .send({ message: ERROR_MESSAGE.valid });
-      }
-      return res
-        .status(ERROR_CODE.internalServerError)
-        .send({ message: ERROR_MESSAGE.default });
-    });
-  return true;
+    .catch(next);
 };
