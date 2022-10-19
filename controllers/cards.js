@@ -14,7 +14,7 @@ module.exports.getCards = (req, res, next) => {
 
 module.exports.createCard = (req, res, next) => {
   const { name, link } = req.body;
-  const owner = req.user;
+  const owner = req.user._id;
   Card.create({ name, link, owner })
     .then((card) => res.send({ data: card }))
     .catch(next);
@@ -26,14 +26,18 @@ module.exports.deleteCard = (req, res, next) => {
       if (!card) {
         throw new NotFoundError(ERROR_MESSAGE.notFound);
       }
-      if (card.owner.toString() !== req.user_id) {
+      const isOwn = card.owner._id.equals(req.user._id);
+      if (!isOwn) {
         throw new ForbiddenError(ERROR_MESSAGE.forbidden);
       }
       Card.findByIdAndRemove(req.params.cardId)
         .then((deletedCard) => res.send({ data: deletedCard }))
         .catch(next);
+      return true;
     })
     .catch(next);
+
+  return true;
 };
 
 module.exports.likeCard = (req, res, next) => {
@@ -46,9 +50,11 @@ module.exports.likeCard = (req, res, next) => {
       if (!card) {
         throw new NotFoundError(ERROR_MESSAGE.notFound);
       }
-      return res.send({ data: card });
+      res.send({ data: card });
+      return true;
     })
     .catch(next);
+  return true;
 };
 
 module.exports.unlikeCard = (req, res, next) => {
@@ -61,7 +67,9 @@ module.exports.unlikeCard = (req, res, next) => {
       if (!card) {
         throw new NotFoundError(ERROR_MESSAGE.notFound);
       }
-      return res.send({ data: card });
+      res.send({ data: card });
+      return true;
     })
     .catch(next);
+  return true;
 };
