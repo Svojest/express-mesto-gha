@@ -9,6 +9,9 @@ const { ERROR_TYPE, ERROR_MESSAGE } = require('../constans/errors');
 
 module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
+  console.log('body', req.body);
+
+  // return res.json({hello:"yes"});
 
   return User.findUserByCredentials(email, password)
     .then((user) => {
@@ -71,7 +74,7 @@ module.exports.createUser = (req, res, next) => {
     name, about, avatar, email, password,
   } = req.body;
 
-  bcrypt.hash((password, 10)
+  bcrypt.hash(password, 10)
     .then((hash) => User.create({
       name, about, avatar, email, password: hash,
     }))
@@ -87,11 +90,11 @@ module.exports.createUser = (req, res, next) => {
       if (err.code === 11000) {
         return next(new ConflictError(ERROR_MESSAGE.userExists));
       }
-      if (err.name === ERROR_TYPE.valid || err.name === ERROR_TYPE.cast) {
+      if (err.name === ERROR_TYPE.valid) {
         return next(new ValidError(ERROR_MESSAGE.valid));
       }
       return next(err);
-    }));
+    });
 };
 
 module.exports.updateUser = (req, res, next) => {

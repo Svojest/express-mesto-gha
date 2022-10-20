@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
-const { errors, celebrate, Joi } = require('celebrate');
+const { celebrate, Joi } = require('celebrate');
 
 const auth = require('./middlewares/auth');
 const { login, createUser } = require('./controllers/users');
@@ -40,15 +40,19 @@ app.post('/signin', celebrate({
   }),
 }), login);
 
-app.post('/signup', celebrate({
-  body: Joi.object().keys({
-    name: Joi.string().min(2).max(30),
-    about: Joi.string().min(2).max(30),
-    avatar: Joi.string().regex(REGEX_URL),
-    email: Joi.string().required(),
-    password: Joi.string().required(),
+app.post(
+  '/signup',
+  celebrate({
+    body: Joi.object().keys({
+      name: Joi.string().min(2).max(30),
+      about: Joi.string().min(2).max(30),
+      avatar: Joi.string().regex(REGEX_URL),
+      email: Joi.string().email().required(),
+      password: Joi.string().required(),
+    }),
   }),
-}), createUser);
+  createUser,
+);
 
 // Защита роутов
 app.use(auth);
@@ -61,7 +65,7 @@ app.use(() => {
   throw new NotFoundError(ERROR_MESSAGE.notFound);
 });
 
-app.use(errors());
+// app.use(errors());
 
 app.use((err, req, res, next) => {
   // Если у ошибки нет статуса, выставляем 500

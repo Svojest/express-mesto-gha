@@ -11,11 +11,7 @@ const cardSchema = new mongoose.Schema({
   link: {
     type: String,
     required: true,
-    validate: {
-      validator(v) {
-        return REGEX_URL.test(v);
-      },
-    },
+    validate: REGEX_URL,
   },
   owner: {
     type: mongoose.Schema.Types.ObjectId,
