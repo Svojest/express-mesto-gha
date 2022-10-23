@@ -4,13 +4,9 @@ const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
-const { errors, celebrate, Joi } = require('celebrate');
+const routes = require('./routes/index');
 
-const auth = require('./middlewares/auth');
-const { login, createUser } = require('./controllers/users');
-const { ERROR_MESSAGE } = require('./constans/errors');
-const { REGEX_URL } = require('./constans/regex');
-const NotFoundError = require('./errors/notFound');
+const centralErrorHandling = require('./middlewares/centralErrorHandling');
 
 // Слушаем 3000 порт
 const { PORT = 3000 } = process.env;
@@ -32,59 +28,9 @@ app.use(cookieParser());
 app.use(limiter);
 app.use(helmet());
 
-// Без защиты роутов
-app.post(
-  '/signin',
-  celebrate({
-    body: Joi.object().keys({
-      email: Joi.string().email().required(),
-      password: Joi.string().required(),
-    }),
-  }),
-  login,
-);
+app.use(routes);
 
-app.post(
-  '/signup',
-  celebrate({
-    body: Joi.object().keys({
-      name: Joi.string().min(2).max(30),
-      about: Joi.string().min(2).max(30),
-      avatar: Joi.string().regex(REGEX_URL),
-      email: Joi.string().email().required(),
-      password: Joi.string().required(),
-    }),
-  }),
-  createUser,
-);
-
-// Защита роутов
-app.use(auth);
-
-app.use('/cards', require('./routes/cards'));
-app.use('/users', require('./routes/users'));
-
-// Неверные пути
-app.use(() => {
-  throw new NotFoundError(ERROR_MESSAGE.notFound);
-});
-
-app.use(errors());
-
-app.use((err, req, res, next) => {
-  // Если у ошибки нет статуса, выставляем 500
-  const { statusCode = 500, message } = err;
-
-  res
-    .status(statusCode)
-    .send({
-      // Проверяем статус и выставляем сообщение в зависимости от него
-      message: statusCode === 500
-        ? ERROR_MESSAGE.default
-        : message,
-    });
-  next();
-});
+app.use(centralErrorHandling);
 
 app.listen(PORT, () => {
   console.log(PORT);
