@@ -4,9 +4,11 @@ const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
+const { errors } = require('celebrate');
 const routes = require('./routes/index');
 
 const centralErrorHandling = require('./middlewares/centralErrorHandling');
+const { requestLogger, errorLogger } = require('./middlewares/logger');
 
 // Слушаем 3000 порт
 const { PORT = 3000 } = process.env;
@@ -28,7 +30,10 @@ app.use(cookieParser());
 app.use(limiter);
 app.use(helmet());
 
+app.use(requestLogger); // подключаем логгер запросов
 app.use(routes);
+app.use(errorLogger); // подключаем логгер ошибок
+app.use(errors());
 
 app.use(centralErrorHandling);
 
